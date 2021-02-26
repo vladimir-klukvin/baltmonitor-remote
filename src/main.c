@@ -44,7 +44,6 @@ int32_t main(int32_t argc, char_t *argv[])
         case 'a':
             addr = realloc(addr, strlen(optarg) + 1);
             strcpy(addr, optarg);
-            printf("%s", addr);
             break;
         case 'p':
             port = atoi(optarg);

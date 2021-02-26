@@ -211,6 +211,10 @@ static void *socket_thread(void *arg)
 
 int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
 {
+    /* Print server info message */
+    printf("Starting server: %s:%i\n", addr, port);
+    printf("Max connetions: %i\n", max_connections);
+
     /*
      * Create the server socket
      * IP protocol family
@@ -245,11 +249,11 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
         return ECONNREFUSED;
     }
 
-    /* Listen on the socket, with 50 max connection requests queued */
-    if (listen(server_sockfd, 50) == 0) {
+    /* Listen on the socket, with max connection requests queued */
+    if (listen(server_sockfd, max_connections) == 0) {
         printf("Listening\n");
     } else {
-        printf("Error\n");
+        printf("Unable to listen\n");
         return ECONNREFUSED;
     }
 
@@ -284,7 +288,7 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
             printf("Failed to create thread\n %i", result);
         }
 
-        if (num_of_threads >= 60) {
+        if (num_of_threads >= max_connections) {
             join_threads();
         }
     }
