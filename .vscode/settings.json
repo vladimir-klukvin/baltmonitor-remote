@@ -1,0 +1,19 @@
+{
+    "[c]": {
+        "editor.rulers": [
+            80
+        ],
+        "files.insertFinalNewline": true,
+        "editor.glyphMargin": true,
+    },
+    "files.associations": {
+        "*.C": "c",
+        "*.c": "c",
+        "*.H": "c",
+        "*.h": "c",
+        ".I0": "c",
+        ".i0": "c",
+        "*.cshtml": "html",
+        "limits": "c"
+    },
+}
