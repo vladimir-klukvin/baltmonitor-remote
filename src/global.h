@@ -4,7 +4,8 @@
  * @brief Global variable declaration and global type definition
  * @date 2021-02-26
  *
- * @copyright Copyright. All rights reserved.
+ * @copyright Copyright Balt-System Ltd. <info@bsystem.ru>
+ * All rights reserved.
  *
  */
 #ifndef GLOBAL_H_

@@ -1,10 +1,11 @@
 /**
  * @file server.h
- * @author Zh.T. V.K.
+ * @author V.K.
  * @brief
  * @date 2021-02-26
  *
- * @copyright Copyright. All rights reserved.
+ * @copyright Copyright Balt-System Ltd. <info@bsystem.ru>
+ * All rights reserved.
  *
  */
 #ifndef SERVER_H_

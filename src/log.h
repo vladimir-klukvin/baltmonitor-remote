@@ -1,10 +1,11 @@
 /**
  * @file log.h
- * @author Zh.T. V.K.
+ * @author V.K.
  * @brief
  * @date 2021-03-01
  *
- * @copyright Copyright. All rights reserved.
+ * @copyright Copyright Balt-System Ltd. <info@bsystem.ru>
+ * All rights reserved.
  *
  */
 #ifndef LOG_H_

@@ -19,5 +19,28 @@
         "**/CVS": true,
         "**/.DS_Store": true,
         "baltmonitor-remote": true
-    }
+    },
+    "doxdocgen.generic.order": [
+        "brief",
+        "tparam",
+        "param",
+        "return",
+        "custom"
+    ],
+    "doxdocgen.file.fileOrder": [
+        "file",
+        "author",
+        "brief",
+        "date",
+        "empty",
+        "copyright",
+        "empty",
+        "custom"
+    ],
+    "doxdocgen.file.copyrightTag": [
+        "@copyright Copyright Balt-System Ltd. <info@bsystem.ru>",
+        "All rights reserved."
+    ],
+    "doxdocgen.generic.authorName": "V.K.",
+    "doxdocgen.generic.authorTag": "@author {author}",
 }

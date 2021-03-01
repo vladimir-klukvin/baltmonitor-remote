@@ -4,7 +4,8 @@
  * @brief This file contains all the definitions for storing server sessions.
  * @date 2021-02-26
  *
- * @copyright Copyright. All rights reserved.
+ * @copyright Copyright Balt-System Ltd. <info@bsystem.ru>
+ * All rights reserved.
  *
  */
 #include "session.h"

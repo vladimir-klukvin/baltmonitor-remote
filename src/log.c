@@ -1,3 +1,13 @@
+/**
+ * @file log.c
+ * @author V.K.
+ * @brief
+ * @date 2021-03-01
+ *
+ * @copyright Copyright Balt-System Ltd. <info@bsystem.ru>
+ * All rights reserved.
+ *
+ */
 #include "log.h"
 
 #include <errno.h>
