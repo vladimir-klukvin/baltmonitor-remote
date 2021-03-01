@@ -32,10 +32,19 @@ void configure_logging(void)
 
 void usage(void)
 {
-    printf("Usage\n");
-    printf("  %s [[-a address_arg] [-p port_arg] [-n n_arg]] | [-h] \n\n",
-           PROGRAM_NAME);
+    /* clang-format off */
+    printf("Usage:\n");
+    printf("  %s [[-a <ip_address>] [-p <port_num>] [-n <count>]] | [-h] \n",PROGRAM_NAME);
+    printf("\n");
     printf("Options:\n");
+    printf("  -a, --address <ip_address>     start server at <ip_address> ip-address\n");
+    printf("  -p, --port <port_num>          server will use <port_num> port\n");
+    printf("  -n, --nconnections <count>     can serve simultaneously <count> clients\n");
+    printf("  -h, --help                     give this help list\n");
+    printf("\n");
+    printf("Mandatory or optional arguments to long options are also mandatory or optional\n");
+    printf("for any corresponding short options.\n");
+    /* clang-format on */
 }
 
 int32_t main(int32_t argc, char_t *argv[])
