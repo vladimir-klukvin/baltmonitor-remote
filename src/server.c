@@ -9,13 +9,13 @@
  */
 #include <arpa/inet.h>
 #include <errno.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <malloc.h>
-#include <stdlib.h>
 
 #include "global.h"
 #include "session.h"
@@ -214,6 +214,9 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
     /* Print server info message */
     printf("Starting server: %s:%i\n", addr, port);
     printf("Max connetions: %i\n", max_connections);
+
+    /* Init sessions table */
+    session_init_table(max_connections);
 
     /*
      * Create the server socket

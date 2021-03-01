@@ -25,4 +25,8 @@ struct session_info *session_get(uint16_t id);
 
 void session_add(struct session_info session, uint16_t id);
 
+void session_remove(uint16_t id);
+
+void session_init_table(int16_t max_sessions);
+
 #endif /* SESSION_H_ */

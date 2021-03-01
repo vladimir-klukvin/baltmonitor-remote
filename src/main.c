@@ -65,7 +65,7 @@ int32_t main(int32_t argc, char_t *argv[])
             printf("Invalid option: %s \n", argv[optind++]);
         printf("\n");
     }
-
+    
     server_start(addr, port, max_connections);
 
     exit(EXIT_FAILURE);

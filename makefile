@@ -10,10 +10,10 @@ OBJ := $(SRC:%.c=$(OBJDIR)/%.obj)
 
 APP = baltmonitor-remote
 
-all: CFLAGS += -Ofast
+all: CFLAGS += -O3
 all: $(APP)
 
-release: CFLAGS += -DNDEBUG -Ofast
+release: CFLAGS += -DNDEBUG -O3
 release: $(APP)
 
 debug: CFLAGS += -DDEBUG -g

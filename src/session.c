@@ -1,7 +1,7 @@
 /**
  * @file session.c
  * @author V.K.
- * @brief
+ * @brief This file contains all the definitions for storing server sessions.
  * @date 2021-02-26
  *
  * @copyright Copyright. All rights reserved.
@@ -15,22 +15,45 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SIZE 20
-
+/**
+ * @brief Internal struct witch represents hash table item
+ */
 struct key_value_pair {
     struct session_info value;
     int16_t key;
 };
 
-struct key_value_pair *hash_array[SIZE];
-struct key_value_pair *dummy_item;
-struct key_value_pair *item;
+/**
+ * @brief Internal hash table array
+ */
+static struct key_value_pair **hash_array;
 
+/**
+ * @brief Placeholder for removed items
+ */
+static struct key_value_pair *dummy_item;
+
+/**
+ * @brief Hash table internal array size.
+ */
+static int16_t hash_array_size;
+
+/**
+ * @brief Generates a hash code for specified key.
+ * Values are used to index a hash table.
+ * @param key Specified key
+ * @return int16_t Hash
+ */
 int16_t hash_code(int16_t key)
 {
-    return key % SIZE;
+    return key % hash_array_size;
 }
 
+/**
+ * @brief Search key_value_pair in hash table by key
+ * @param key Specified key
+ * @return struct key_value_pair* Pointer to hash table item
+ */
 struct key_value_pair *find_item(int16_t key)
 {
     /* Get the hash */
@@ -45,12 +68,17 @@ struct key_value_pair *find_item(int16_t key)
         ++hash_index;
 
         /* Wrap around the table */
-        hash_index %= SIZE;
+        hash_index %= hash_array_size;
     }
 
     return NULL;
 }
 
+/**
+ * @brief Put new key_value_pair item to hash table
+ * @param key Item key.
+ * @param data Item Value.
+ */
 static void insert_item(int key, struct session_info data)
 {
     struct key_value_pair *item = malloc(sizeof(struct key_value_pair));
@@ -62,17 +90,23 @@ static void insert_item(int key, struct session_info data)
 
     /* Move in array until an empty or deleted cell */
     while (hash_array[hash_index] != NULL &&
-           hash_array[hash_index]->key != -1) {
+           hash_array[hash_index]->key != dummy_item->key) {
         /* Go to next cell */
         ++hash_index;
 
         /* Wrap around the table */
-        hash_index %= SIZE;
+        hash_index %= hash_array_size;
     }
 
     hash_array[hash_index] = item;
 }
 
+/**
+ * @brief Remove key_value_pair from hash table
+ * @param item Pointer to key_value_pair which must be removed from hash table
+ * @return struct key_value_pair* Pointer to same key_value_pair or
+ * NULL if pair not exists in hash table
+ */
 static struct key_value_pair *remove_item(struct key_value_pair *item)
 {
     int key = item->key;
@@ -94,7 +128,7 @@ static struct key_value_pair *remove_item(struct key_value_pair *item)
         ++hash_index;
 
         /* Wrap around the table */
-        hash_index %= SIZE;
+        hash_index %= hash_array_size;
     }
 
     return NULL;
@@ -113,4 +147,19 @@ struct session_info *session_get(uint16_t id)
 void session_add(struct session_info session, uint16_t id)
 {
     insert_item(id, session);
+}
+
+void session_remove(uint16_t id)
+{
+    struct key_value_pair *pair = find_item(id);
+    free(remove_item(pair));
+}
+
+void session_init_table(int16_t max_sessions)
+{
+    hash_array_size = max_sessions;
+    hash_array = calloc(hash_array_size, sizeof(struct key_value_pair *));
+
+    dummy_item = malloc(sizeof(struct key_value_pair));
+    dummy_item->key = -1;
 }
