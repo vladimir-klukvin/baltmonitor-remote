@@ -1,26 +1,39 @@
+/**
+ * @file log.h
+ * @author Zh.T. V.K.
+ * @brief
+ * @date 2021-03-01
+ *
+ * @copyright Copyright. All rights reserved.
+ *
+ */
+#ifndef LOG_H_
+#define LOG_H_
+
 /*
  * Logging methods by levels
  */
-void log_error(char* format, ...);
-void log_warning(char* format, ...);
-void log_info(char* format, ...);
-void log_debug(char* format, ...);
+extern void log_error(char_t *format, ...);
+extern void log_warning(char_t *format, ...);
+extern void log_info(char_t *format, ...);
+extern void log_debug(char_t *format, ...);
 
 /*
  * Log level configurator
  * Default is LOG_MAX_LEVEL_ERROR_WARNING_INFO
  */
-
-#define LOG_MAX_LEVEL_ERROR 0
-#define LOG_MAX_LEVEL_ERROR_WARNING_INFO 1
+#define LOG_MAX_LEVEL_ERROR                    0
+#define LOG_MAX_LEVEL_ERROR_WARNING_INFO       1
 #define LOG_MAX_LEVEL_ERROR_WARNING_INFO_DEBUG 2
 
-void log_set_log_level(const int level);
+extern void log_set_log_level(const int32_t level);
 
 /*
  * Set target type
  * Default is syslog
  */
-void log_reset_state(void);
-int log_set_log_file(const char* filename);
-void log_set_out_stdout(void);
+extern void log_reset_state(void);
+extern int32_t log_set_log_file(const char_t *filename);
+extern void log_set_out_stdout(void);
+
+#endif /* LOG_H_ */

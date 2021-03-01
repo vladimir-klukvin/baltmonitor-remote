@@ -210,8 +210,7 @@ static struct session_info *join_session(uint16_t id, int32_t targetfd)
 
 static void clear_empty_session(struct session_info *session)
 {
-    if(!session->is_host_connected && !session->is_target_connected)
-    {
+    if (!session->is_host_connected && !session->is_target_connected) {
         session_remove(session->session_id);
     }
 }
@@ -245,7 +244,7 @@ static void *socket_thread(void *arg)
 
         session = join_session(req->header.session_id, sockfd);
 
-        if(session == NULL){
+        if (session == NULL) {
             break;
         }
 

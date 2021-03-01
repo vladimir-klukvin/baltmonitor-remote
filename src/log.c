@@ -122,7 +122,7 @@ int32_t log_set_log_file(const char_t *filename)
     return 0;
 }
 
-void log_set_out_stdout()
+void log_set_out_stdout(void)
 {
     cleanup_internal();
 
