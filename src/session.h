@@ -10,16 +10,17 @@
 #ifndef SESSION_H_
 #define SESSION_H_
 
-#include <stdbool.h>
 #include <stdint.h>
+
+#include "global.h"
 
 /**
  * @brief Struct which contain state of pair communication session
  */
 struct session_info {
     uint16_t session_id;
-    bool is_host_connected;
-    bool is_target_connected;
+    bool_t is_host_connected;
+    bool_t is_target_connected;
     int32_t host_sockfd;
     int32_t target_sockfd;
 };
@@ -36,18 +37,25 @@ struct session_info *session_get(uint16_t id);
  * @param session Session to store
  * @param id Id of session
  */
-void session_add(struct session_info session, uint16_t id);
+extern void session_add(struct session_info session, uint16_t id);
 
 /**
  * @brief Remove session by id. If session not found does nothing.
  * @param id Id of session
  */
-void session_remove(uint16_t id);
+extern void session_remove(uint16_t id);
 
 /**
  * @brief Initialize sessions table to store max_sessions
  * @param max_sessions Max number of sessions which server supports
  */
-void session_init_table(int16_t max_sessions);
+extern void session_init_table(int16_t max_sessions);
+
+/**
+ * @brief Check session for existing in table
+ * @param id Id of session
+ * @return bool_t true if exist, false if not
+ */
+extern bool_t session_is_exist(uint16_t id);
 
 #endif /* SESSION_H_ */

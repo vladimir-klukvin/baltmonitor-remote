@@ -18,8 +18,8 @@
 #include <unistd.h>
 
 #include "global.h"
-#include "session.h"
 #include "log.h"
+#include "session.h"
 
 #define SOCKET_BUFFER_SIZE 20000
 
@@ -174,36 +174,87 @@ static void target_routine(struct session_info *session)
     free(buffer);
 }
 
+static uint16_t generate_session_id(void)
+{
+    uint16_t id;
+    do {
+        id = rand() % 10000;
+    } while (session_is_exist(id));
+
+    return id;
+}
+
+static struct session_info *new_session(int32_t hostfd)
+{
+    struct session_info *session = calloc(1, sizeof(struct session_info));
+    session->host_sockfd = hostfd;
+    session->is_host_connected = true;
+
+    session->session_id = generate_session_id();
+
+    return session;
+}
+
+static struct session_info *join_session(uint16_t id, int32_t targetfd)
+{
+    if (!session_is_exist(id)) {
+        return NULL;
+    }
+
+    struct session_info *session = session_get(id);
+    session->target_sockfd = targetfd;
+    session->is_target_connected = true;
+
+    return session;
+}
+
+static void clear_empty_session(struct session_info *session)
+{
+    if(!session->is_host_connected && !session->is_target_connected)
+    {
+        session_remove(session->session_id);
+    }
+}
+
 static void *socket_thread(void *arg)
 {
     int32_t sockfd = *((int32_t *)arg);
 
     char_t buffer[1000];
     recv(sockfd, buffer, sizeof(buffer), 0);
-
     struct request *req = (struct request *)buffer;
-    enum role role;
-    if (req->header.req_type == REQUEST_MAKE_SESSION) {
-        role = ROLE_HOST;
-        test_info.session_id = 'AB';
-        test_info.is_host_connected = true;
-        test_info.host_sockfd = sockfd;
+    struct session_info *session;
+    switch (req->header.req_type) {
+    case REQUEST_MAKE_SESSION:
+        if (req->header.role != ROLE_HOST) {
+            break;
+        }
+        session = new_session(sockfd);
 
-        send(sockfd, &test_info.session_id, sizeof(test_info.session_id), 0);
-    } else if (req->header.req_type == REQUEST_JOIN_SESSION) {
-        /* TODO: find session */
-        role = ROLE_TARGET;
-        test_info.is_target_connected = true;
-        test_info.target_sockfd = sockfd;
+        /* FIXME: TEST */
+        send(sockfd, &session->session_id, sizeof(session->session_id), 0);
+
+        host_routine(session);
+        clear_empty_session(session);
+        break;
+
+    case REQUEST_JOIN_SESSION:
+        if (req->header.role != ROLE_TARGET) {
+            break;
+        }
+
+        session = join_session(req->header.session_id, sockfd);
+
+        if(session == NULL){
+            break;
+        }
+
+        target_routine(session);
+        clear_empty_session(session);
+        break;
+    default:
+        break;
     }
-
-    if (role == ROLE_HOST) {
-        host_routine(&test_info);
-    } else {
-        target_routine(&test_info);
-    }
-
-    /* TODO: if both not connected remove session */
 
     log_debug("Exit socket_thread");
     close(sockfd);
@@ -215,6 +266,9 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
     /* Print server info message */
     log_info("Starting server: %s:%i", addr, port);
     log_info("Max connetions: %i", max_connections);
+
+    /* Set seed for rand function */
+    srand(time(0));
 
     /* Init sessions table */
     session_init_table(max_connections);

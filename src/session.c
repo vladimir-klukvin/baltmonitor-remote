@@ -15,6 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "global.h"
+
 /**
  * @brief Internal struct witch represents hash table item
  */
@@ -132,6 +134,11 @@ static struct key_value_pair *remove_item(struct key_value_pair *item)
     }
 
     return NULL;
+}
+
+bool_t session_is_exist(uint16_t id)
+{
+    return session_get(id) != NULL;
 }
 
 struct session_info *session_get(uint16_t id)

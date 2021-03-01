@@ -44,15 +44,9 @@ IncludeCategories:
   - Regex:           '^<'
     Priority:        1
     SortPriority:    1
-  - Regex:           '^"dsp/F2837xD_'
+  - Regex:           '^"'
     Priority:        2
     SortPriority:    2
-  - Regex:           '^"syscfg/f2837xd_'
-    Priority:        2
-    SortPriority:    3
-  - Regex:           '^((?!dsp/F2837xD_).)*$'
-    Priority:        3
-    SortPriority:    3
 IndentCaseLabels: false
 IndentPPDirectives: None
 IndentWidth:     4
