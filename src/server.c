@@ -19,6 +19,7 @@
 
 #include "global.h"
 #include "session.h"
+#include "log.h"
 
 #define SOCKET_BUFFER_SIZE 20000
 
@@ -204,7 +205,7 @@ static void *socket_thread(void *arg)
 
     /* TODO: if both not connected remove session */
 
-    printf("Exit socket_thread\n");
+    log_debug("Exit socket_thread");
     close(sockfd);
     pthread_exit(NULL);
 }
@@ -212,8 +213,8 @@ static void *socket_thread(void *arg)
 int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
 {
     /* Print server info message */
-    printf("Starting server: %s:%i\n", addr, port);
-    printf("Max connetions: %i\n", max_connections);
+    log_info("Starting server: %s:%i", addr, port);
+    log_info("Max connetions: %i", max_connections);
 
     /* Init sessions table */
     session_init_table(max_connections);
@@ -248,15 +249,15 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
     /* Bind the address struct to the socket */
     if (bind(server_sockfd, (struct sockaddr *)&server_addr,
              sizeof(server_addr)) == -1) {
-        printf("Unable to bind\n");
+        log_error("Unable to bind");
         return ECONNREFUSED;
     }
 
     /* Listen on the socket, with max connection requests queued */
     if (listen(server_sockfd, max_connections) == 0) {
-        printf("Listening\n");
+        log_debug("Listening");
     } else {
-        printf("Unable to listen\n");
+        log_error("Unable to listen");
         return ECONNREFUSED;
     }
 
@@ -272,10 +273,10 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
     while (true) {
         /* Accept call. Create a new socket for the incoming connection */
         addr_size = sizeof(server_storage);
-        printf("Wait client\n");
+        log_debug("Wait for a client");
         new_sd = accept(server_sockfd, (struct sockaddr *)&server_storage,
                         &addr_size);
-        printf("New client\n");
+        log_debug("Accept client");
 
         opened_sockets[num_of_opened_sockets++] = new_sd;
 
@@ -288,7 +289,7 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
                                         socket_thread, &new_sd);
 
         if (result != 0) {
-            printf("Failed to create thread\n %i", result);
+            log_error("Failed to create thread: %i", result);
         }
 
         if (num_of_threads >= max_connections) {

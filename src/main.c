@@ -1,23 +1,41 @@
-#include <stdlib.h>
 #include <getopt.h>
 #include <malloc.h>
 #include <signal.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "global.h"
+#include "log.h"
 #include "server.h"
 
 void on_sigint(int32_t _)
 {
-    printf("\nExit\n");
+    log_info("Exit");
     server_stop();
     exit(EXIT_SUCCESS);
 }
 
+void configure_logging(void)
+{
+    log_reset_state();
+    /* TODO: Select output by arg */
+    log_set_out_stdout();
+
+#ifdef NDEBUG
+    log_set_log_level(LOG_MAX_LEVEL_ERROR_WARNING_INFO);
+#else
+    log_set_log_level(LOG_MAX_LEVEL_ERROR_WARNING_INFO_DEBUG);
+#endif
+}
+
 void usage(void)
 {
+    printf("Usage\n");
+    printf("  %s [[-a address_arg] [-p port_arg] [-n n_arg]] | [-h] \n\n",
+           PROGRAM_NAME);
+    printf("Options:\n");
 }
 
 int32_t main(int32_t argc, char_t *argv[])
@@ -65,7 +83,9 @@ int32_t main(int32_t argc, char_t *argv[])
             printf("Invalid option: %s \n", argv[optind++]);
         printf("\n");
     }
-    
+
+    configure_logging();
+
     server_start(addr, port, max_connections);
 
     exit(EXIT_FAILURE);
