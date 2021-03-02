@@ -45,7 +45,7 @@ enum role { ROLE_HOST = 'H', ROLE_TARGET = 'T' };
 
 struct response {
     struct response_header {
-        enum response_type resp_type;
+        enum response_type type;
         uint16_t session_id;
         size_t body_size;
     } header;
@@ -54,7 +54,7 @@ struct response {
 
 struct request {
     struct request_header {
-        enum request_type req_type : 8;
+        enum request_type type : 8;
         enum role role : 8;
         uint16_t session_id;
         size_t body_size;
@@ -100,7 +100,7 @@ static void close_host_connection(struct session_info *session)
     if (session->is_target_connected) {
         struct response resp;
         resp.header.body_size = 0;
-        resp.header.resp_type = RESPONSE_SESSION_CLOSED_BY_HOST;
+        resp.header.type = RESPONSE_SESSION_CLOSED_BY_HOST;
         resp.header.session_id = session->session_id;
         send(session->target_sockfd, &resp, sizeof(resp), 0);
     }
@@ -115,7 +115,7 @@ static void close_target_connection(struct session_info *session)
     if (session->is_host_connected) {
         struct response resp;
         resp.header.body_size = 0;
-        resp.header.resp_type = RESPONSE_SESSION_CLOSED_BY_TARGET;
+        resp.header.type = RESPONSE_SESSION_CLOSED_BY_TARGET;
         resp.header.session_id = session->session_id;
         send(session->host_sockfd, &resp, sizeof(resp), 0);
     }
@@ -193,6 +193,8 @@ static struct session_info *new_session(int32_t hostfd)
 
     session->session_id = generate_session_id();
 
+    log_info("New session with id %i created", session->session_id);
+
     return session;
 }
 
@@ -206,6 +208,8 @@ static struct session_info *join_session(uint16_t id, int32_t targetfd)
     session->target_sockfd = targetfd;
     session->is_target_connected = true;
 
+    log_info("Joining to session with id %i success", session->session_id);
+
     return session;
 }
 
@@ -216,23 +220,28 @@ static void clear_empty_session(struct session_info *session)
     }
 }
 
-static void *socket_thread(void *arg)
+static void send_session_response(int32_t sockfd, enum response_type type,
+                                  uint16_t session_id)
 {
-    int32_t sockfd = *((int32_t *)arg);
+    struct response resp = {.header.type = type,
+                            .header.session_id = session_id};
 
-    char_t buffer[1000];
-    recv(sockfd, buffer, sizeof(buffer), 0);
-    struct request *req = (struct request *)buffer;
-    struct session_info *session;
-    switch (req->header.req_type) {
+    send(sockfd, &resp, sizeof(resp), 0);
+}
+
+static void handle_session_request(struct request *req, int32_t sockfd)
+{
+    switch (req->header.type) {
     case REQUEST_MAKE_SESSION:
         if (req->header.role != ROLE_HOST) {
+            send_session_response(sockfd, RESPONCE_MAKE_SESSION_FAIL, 0);
             break;
         }
-        session = new_session(sockfd);
 
-        /* FIXME: TEST */
-        send(sockfd, &session->session_id, sizeof(session->session_id), 0);
+        struct session_info *session = new_session(sockfd);
+
+        send_session_response(sockfd, RESPONCE_MAKE_SESSION_SUCCESS,
+                              session->session_id);
 
         host_routine(session);
         clear_empty_session(session);
@@ -240,20 +249,42 @@ static void *socket_thread(void *arg)
 
     case REQUEST_JOIN_SESSION:
         if (req->header.role != ROLE_TARGET) {
+            send_session_response(sockfd, RESPONSE_JOIN_SESSION_FAIL,
+                                  req->header.session_id);
             break;
         }
 
-        session = join_session(req->header.session_id, sockfd);
+        struct session_info *session =
+            join_session(req->header.session_id, sockfd);
 
         if (session == NULL) {
+            send_session_response(sockfd, RESPONSE_JOIN_SESSION_FAIL,
+                                  req->header.session_id);
             break;
         }
+
+        send_session_response(sockfd, RESPONSE_JOIN_SESSION_SUCCESS,
+                              session->session_id);
 
         target_routine(session);
         clear_empty_session(session);
         break;
     default:
         break;
+    }
+}
+
+static void *socket_thread(void *arg)
+{
+    int32_t sockfd = *((int32_t *)arg);
+
+    char_t buffer[1000];
+    ssize_t recv_size = recv(sockfd, buffer, sizeof(buffer), 0);
+
+    if (recv_size == sizeof(struct request_header)) {
+        struct request *req = (struct request *)buffer;
+
+        handle_session_request(req, sockfd);
     }
 
     log_debug("Exit socket_thread");
