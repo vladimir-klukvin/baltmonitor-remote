@@ -232,7 +232,7 @@ static void send_session_response(int32_t sockfd, enum response_type type,
 static void handle_session_request(struct request *req, int32_t sockfd)
 {
     switch (req->header.type) {
-    case REQUEST_MAKE_SESSION:
+    case REQUEST_MAKE_SESSION: {
         if (req->header.role != ROLE_HOST) {
             send_session_response(sockfd, RESPONCE_MAKE_SESSION_FAIL, 0);
             break;
@@ -246,8 +246,9 @@ static void handle_session_request(struct request *req, int32_t sockfd)
         host_routine(session);
         clear_empty_session(session);
         break;
+    }
 
-    case REQUEST_JOIN_SESSION:
+    case REQUEST_JOIN_SESSION: {
         if (req->header.role != ROLE_TARGET) {
             send_session_response(sockfd, RESPONSE_JOIN_SESSION_FAIL,
                                   req->header.session_id);
@@ -269,6 +270,7 @@ static void handle_session_request(struct request *req, int32_t sockfd)
         target_routine(session);
         clear_empty_session(session);
         break;
+    }
     default:
         break;
     }
