@@ -31,6 +31,7 @@ enum response_type {
     RESPONSE_JOIN_SESSION_FAIL,
     RESPONSE_SESSION_CLOSED_BY_HOST,
     RESPONSE_SESSION_CLOSED_BY_TARGET,
+    RESPONSE_RAISE_EVENT = 'E',
     RESPONSE_DATA = 'D',
 };
 
@@ -38,6 +39,7 @@ enum request_type {
     REQUEST_MAKE_SESSION = 'M',
     REQUEST_JOIN_SESSION = 'J',
     REQUEST_CLOSE_SESSION = 'C',
+    REQUEST_RAISE_EVENT = 'E',
     REQUEST_DATA = 'D',
 };
 
@@ -229,7 +231,7 @@ static void send_session_response(int32_t sockfd, enum response_type type,
     send(sockfd, &resp, sizeof(resp), 0);
 }
 
-static void handle_session_request(struct request *req, int32_t sockfd)
+static void handle_session_request(const struct request *req, int32_t sockfd)
 {
     switch (req->header.type) {
     case REQUEST_MAKE_SESSION: {
@@ -294,17 +296,17 @@ static void *socket_thread(void *arg)
     pthread_exit(NULL);
 }
 
-int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
+int32_t server_start(const char_t *addr, uint16_t port, int32_t max_clients)
 {
     /* Print server info message */
     log_info("Starting server: %s:%i", addr, port);
-    log_info("Max connetions: %i", max_connections);
+    log_info("Max connetions: %i", max_clients);
 
     /* Set seed for rand function */
     srand(time(0));
 
     /* Init sessions table */
-    session_init_table(max_connections);
+    session_init_table(max_clients);
 
     /*
      * Create the server socket
@@ -336,15 +338,17 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
     /* Bind the address struct to the socket */
     if (bind(server_sockfd, (struct sockaddr *)&server_addr,
              sizeof(server_addr)) == -1) {
+        close(server_sockfd);
         log_error("Unable to bind");
         return ECONNREFUSED;
     }
 
     /* Listen on the socket, with max connection requests queued */
-    if (listen(server_sockfd, max_connections) == 0) {
+    if (listen(server_sockfd, max_clients) == 0) {
         log_debug("Listening");
     } else {
         log_error("Unable to listen");
+        close(server_sockfd);
         return ECONNREFUSED;
     }
 
@@ -379,7 +383,7 @@ int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections)
             log_error("Failed to create thread: %i", result);
         }
 
-        if (num_of_threads >= max_connections) {
+        if (num_of_threads >= max_clients) {
             join_threads();
         }
     }

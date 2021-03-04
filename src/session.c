@@ -93,7 +93,7 @@ static void insert_item(int key, struct session_info data)
 
     /* Move in array until an empty or deleted cell */
     while (hash_array[hash_index] != NULL &&
-           hash_array[hash_index]->key != dummy_item->key) {
+           hash_array[hash_index] != dummy_item) {
         /* Go to next cell */
         ++hash_index;
 

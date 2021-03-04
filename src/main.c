@@ -81,11 +81,10 @@ void usage(void)
 
 int32_t main(int32_t argc, char_t *argv[])
 {
-    signal(SIGINT, on_sigint);
     char_t *addr = malloc(10);
     strcpy(addr, "127.0.0.1");
     int32_t port = 65000;
-    int32_t max_connections = 50;
+    int32_t max_clients = 50;
     char_t *log_file = malloc(11);
     strcpy(log_file, "server.log");
     enum log_location log_loc = LOG_LOCATION_STDOUT;
@@ -113,7 +112,7 @@ int32_t main(int32_t argc, char_t *argv[])
             port = atoi(optarg);
             break;
         case 'm':
-            max_connections = atoi(optarg);
+            max_clients = atoi(optarg);
         case 'f':
             if (log_loc != LOG_LOCATION_STDOUT) {
                 printf("Invalid option: %s\n", argv[optind]);
@@ -149,9 +148,11 @@ int32_t main(int32_t argc, char_t *argv[])
         printf("\n");
     }
 
+    signal(SIGINT, on_sigint);
+
     configure_logging(log_loc, log_file);
 
-    server_start(addr, port, max_connections);
+    int32_t server_error = server_start(addr, port, max_clients);
 
-    exit(EXIT_FAILURE);
+    exit(server_error);
 }

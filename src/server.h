@@ -15,8 +15,18 @@
 
 #include "global.h"
 
-int32_t server_start(char_t *addr, uint16_t port, int32_t max_connections);
+/**
+ * @brief Start remote server
+ * @param addr Server IP address
+ * @param port Server will listen specified port
+ * @param max_clients Can serve simultaneously clients
+ * @return int32_t Status error for exit() (noreturn in nornal way).
+ */
+int32_t server_start(const char_t *addr, uint16_t port, int32_t max_clients);
 
+/**
+ * @brief Stop remote server.
+ */
 void server_stop(void);
 
 #endif /* SERVER_H_ */
