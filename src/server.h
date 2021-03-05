@@ -1,7 +1,8 @@
 /**
  * @file server.h
  * @author V.K.
- * @brief
+ * @brief This file contains function declarations for managing the remote
+ * server.
  * @date 2021-02-26
  *
  * @copyright Copyright (c) 2021 Balt-System Ltd. <info@bsystem.ru>

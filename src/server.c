@@ -1,7 +1,9 @@
 /**
  * @file server.c
  * @author V.K.
- * @brief
+ * @brief This file contains definitions of functions containing the logic of
+ * the remote server, including the request exchange protocol and server
+ * management.
  * @date 2021-02-26
  *
  * @copyright Copyright (c) 2021 Balt-System Ltd. <info@bsystem.ru>
@@ -110,11 +112,9 @@ void close_sockets(void)
     num_of_opened_sockets = 0;
 }
 
-static void close_host_connection(struct session_info *session)
+static void host_leave_session(struct session_info *session)
 {
     session->is_host_connected = false;
-
-    close(session->host_sockfd);
 
     if (session->is_target_connected) {
         struct response resp;
@@ -125,11 +125,9 @@ static void close_host_connection(struct session_info *session)
     }
 }
 
-static void close_target_connection(struct session_info *session)
+static void target_leave_session(struct session_info *session)
 {
     session->is_target_connected = false;
-
-    close(session->host_sockfd);
 
     if (session->is_host_connected) {
         struct response resp;
@@ -146,22 +144,49 @@ static void host_routine(struct session_info *session)
 
     session->is_host_connected = true;
 
-    while (true) {
+    struct request *req = buffer;
+
+    while (session->is_host_connected) {
         ssize_t req_size =
             recv(session->host_sockfd, buffer, sizeof(buffer), 0);
 
         if (req_size <= 0) {
-            close_host_connection(session);
-            break;
+            host_leave_session(session);
+            continue;
         }
 
-        if (memcmp(buffer, "exit\r\n", 6) == 0) {
-            close_host_connection(session);
-            break;
+        if (req->header.role != ROLE_HOST) {
+            /* TODO: Send bad request */
         }
 
-        if (session->is_target_connected) {
-            send(session->target_sockfd, buffer, req_size, 0);
+        size_t expected_size =
+            req->header.body_size + sizeof(struct request_header);
+
+        if (req->header.session_id != session->session_id) {
+            /* TODO: Send bad request */
+        }
+
+        if (req_size != expected_size) {
+            /* TODO: Send bad request */
+        }
+
+        switch (req->header.type) {
+        case REQUEST_CLOSE_SESSION:
+            host_leave_session(session);
+            continue;
+        case REQUEST_DATA:
+            /* TODO: Make some response and send */
+            continue;
+        case REQUEST_RAISE_EVENT:
+            /* TODO: Make some response and send */
+            continue;
+
+        case REQUEST_MAKE_SESSION:
+        case REQUEST_JOIN_SESSION:
+        default:
+            /* FIXME: Send something about bad request? */
+            host_leave_session(session);
+            continue;
         }
     }
     free(buffer);
@@ -173,22 +198,49 @@ static void target_routine(struct session_info *session)
 
     session->is_target_connected = true;
 
-    while (true) {
+    struct request *req = buffer;
+
+    while (session->is_target_connected) {
         size_t req_size =
             recv(session->target_sockfd, buffer, sizeof(buffer), 0);
 
         if (req_size <= 0) {
-            close_target_connection(session);
-            break;
+            target_leave_session(session);
+            continue;
         }
 
-        if (memcmp(buffer, "exit\r\n", 6) == 0) {
-            close_target_connection(session);
-            break;
+        if (req->header.role != ROLE_TARGET) {
+            /* TODO: Send bad request */
         }
 
-        if (session->is_host_connected) {
-            send(session->host_sockfd, buffer, req_size, 0);
+        size_t expected_size =
+            req->header.body_size + sizeof(struct request_header);
+
+        if (req->header.session_id != session->session_id) {
+            /* TODO: Send bad request */
+        }
+
+        if (req_size != expected_size) {
+            /* TODO: Send bad request */
+        }
+
+        switch (req->header.type) {
+        case REQUEST_CLOSE_SESSION:
+            host_leave_session(session);
+            continue;
+        case REQUEST_DATA:
+            /* TODO: Make some response and send */
+            continue;
+        case REQUEST_RAISE_EVENT:
+            /* TODO: Make some response and send */
+            continue;
+
+        case REQUEST_MAKE_SESSION:
+        case REQUEST_JOIN_SESSION:
+        default:
+            /* FIXME: Send something about bad request? */
+            host_leave_session(session);
+            continue;
         }
     }
     free(buffer);

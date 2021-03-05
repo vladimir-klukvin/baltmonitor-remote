@@ -37,18 +37,18 @@
 #include "log.h"
 #include "server.h"
 
+enum log_location {
+    LOG_LOCATION_STDOUT,
+    LOG_LOCATION_FILE,
+    LOG_LOCATION_SYSLOG
+};
+
 void on_sigint(int32_t _)
 {
     log_info("Exit");
     server_stop();
     exit(EXIT_SUCCESS);
 }
-
-enum log_location {
-    LOG_LOCATION_STDOUT,
-    LOG_LOCATION_FILE,
-    LOG_LOCATION_SYSLOG
-};
 
 void configure_logging(enum log_location loc, const char_t *file)
 {
@@ -77,7 +77,7 @@ void usage(void)
 {
     /* clang-format off */
     printf("Usage:\n");
-    printf("  %s [[-a IP_ADDRESS] [-p PORT_NUM] [-m COUNT] [[-f[=FILE_NAME]] | [-s]]] | [-h] \n",PROGRAM_NAME);
+    printf("  %s [[-a IP_ADDRESS] [-p PORT_NUM] [-m COUNT] [[-f[=FILE_NAME]] | [-s]]] | [-h] \n", PROGRAM_NAME);
     printf("\n");
     printf("Options:\n");
     printf("  -a, --address=IP_ADDRESS       start server at IP_ADDRESS \n");
