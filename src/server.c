@@ -140,17 +140,14 @@ static void target_leave_session(struct session_info *session)
 
 static void host_routine(struct session_info *session)
 {
-    char_t *buffer = malloc(SOCKET_BUFFER_SIZE);
-
     session->is_host_connected = true;
-
-    struct request *req = buffer;
+    struct request *req = malloc(SOCKET_BUFFER_SIZE);
 
     while (session->is_host_connected) {
         ssize_t req_size =
-            recv(session->host_sockfd, buffer, sizeof(buffer), 0);
+            recv(session->host_sockfd, req, SOCKET_BUFFER_SIZE, 0);
 
-        if (req_size <= 0) {
+        if (req_size <= 0|| req_size == SOCKET_BUFFER_SIZE) {
             host_leave_session(session);
             continue;
         }
@@ -189,22 +186,19 @@ static void host_routine(struct session_info *session)
             continue;
         }
     }
-    free(buffer);
+    free(req);
 }
 
 static void target_routine(struct session_info *session)
 {
-    char_t *buffer = malloc(SOCKET_BUFFER_SIZE);
-
     session->is_target_connected = true;
-
-    struct request *req = buffer;
+    struct request *req = malloc(SOCKET_BUFFER_SIZE);
 
     while (session->is_target_connected) {
         size_t req_size =
-            recv(session->target_sockfd, buffer, sizeof(buffer), 0);
+            recv(session->target_sockfd, req, SOCKET_BUFFER_SIZE, 0);
 
-        if (req_size <= 0) {
+        if (req_size <= 0 || req_size == SOCKET_BUFFER_SIZE) {
             target_leave_session(session);
             continue;
         }
@@ -243,7 +237,7 @@ static void target_routine(struct session_info *session)
             continue;
         }
     }
-    free(buffer);
+    free(req);
 }
 
 static uint16_t generate_session_id(void)
