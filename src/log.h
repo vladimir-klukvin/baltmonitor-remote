@@ -33,14 +33,9 @@
 
 #include "global.h"
 
-/*
- * Logging methods by levels
+/**
+ * @brief Available log levels
  */
-extern void log_error(const char_t *format, ...);
-extern void log_warning(const char_t *format, ...);
-extern void log_info(const char_t *format, ...);
-extern void log_debug(const char_t *format, ...);
-
 enum log_level {
     LOG_LEVEL_ERROR,
     LOG_LEVEL_WARNING,
@@ -48,9 +43,61 @@ enum log_level {
     LOG_LEVEL_DEBUG
 };
 
+/**
+ * @brief Writes the diagnostic message at the @b Error level using the
+ * specified parameters and formatting them with the supplied format string.
+ * @param format Format string
+ * @param ... Arguments to format
+ */
+extern void log_error(const char_t *format, ...);
+
+/**
+ * @brief Writes the diagnostic message at the @b Warning level using the
+ * specified parameters and formatting them with the supplied format string.
+ * @param format Format string
+ * @param ... Arguments to format
+ */
+extern void log_warning(const char_t *format, ...);
+
+/**
+ * @brief Writes the diagnostic message at the @b Information level using the
+ * specified parameters and formatting them with the supplied format string.
+ * @param format Format string
+ * @param ... Arguments to format
+ */
+extern void log_info(const char_t *format, ...);
+
+/**
+ * @brief Writes the diagnostic message at the @b Debug level using the
+ * specified parameters and formatting them with the supplied format string.
+ * @param format Format string
+ * @param ... Arguments to format
+ */
+extern void log_debug(const char_t *format, ...);
+
+/**
+ * @brief Set the minimum logging level, all calls of logging functions of
+ * a lower level will have no effect
+ * @param level Minumum logging level
+ */
 extern void log_set_min_level(enum log_level level);
+
+/**
+ * @brief Reset internal state and set syslog as default target
+ */
 extern void log_reset_state(void);
+
+/**
+ * @brief Set log target to specified file
+ * @param filename The name of the file where the logs will be sent.
+ * If the file already exists, it will be appended.
+ * @return int32_t 0 for success or -1 for errors
+ */
 extern int32_t log_set_log_file(const char_t *filename);
+
+/**
+ * @brief Set standard output as log target
+ */
 extern void log_set_out_stdout(void);
 
 #endif /* LOG_H_ */

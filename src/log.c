@@ -30,8 +30,8 @@
 
 #include <errno.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <syslog.h>
@@ -73,9 +73,6 @@ static void cleanup_internal(void)
     }
 }
 
-/**
- * @brief Reset internal state and set syslog as default target
- */
 void log_reset_state(void)
 {
     min_log_level = LOG_LEVEL_INFO;
