@@ -1,0 +1,19 @@
+
+name: C CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: make
+      run: make
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: baltmonitor-remote
+        path: ./baltmonitor-remote
