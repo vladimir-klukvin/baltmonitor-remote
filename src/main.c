@@ -166,6 +166,7 @@ int32_t main(int32_t argc, char_t *argv[])
     }
 
     signal(SIGINT, on_sigint);
+    atexit(server_stop);
 
     configure_logging(log_loc, log_file);
 
