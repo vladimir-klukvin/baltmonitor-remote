@@ -34,6 +34,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdnoreturn.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -147,7 +148,7 @@ static void host_routine(struct session_info *session)
         ssize_t req_size =
             recv(session->host_sockfd, req, SOCKET_BUFFER_SIZE, 0);
 
-        if (req_size <= 0|| req_size == SOCKET_BUFFER_SIZE) {
+        if (req_size <= 0 || req_size == SOCKET_BUFFER_SIZE) {
             host_leave_session(session);
             continue;
         }
@@ -359,7 +360,8 @@ static void *socket_thread(void *arg)
     pthread_exit(NULL);
 }
 
-int32_t server_start(const char_t *addr, uint16_t port, int32_t max_clients)
+noreturn void server_start(const char_t *addr, uint16_t port,
+                           int32_t max_clients)
 {
     /* Print server info message */
     log_info("Starting server: %s:%i", addr, port);
@@ -403,7 +405,7 @@ int32_t server_start(const char_t *addr, uint16_t port, int32_t max_clients)
              sizeof(server_addr)) == -1) {
         close(server_sockfd);
         log_error("Unable to bind");
-        return ECONNREFUSED;
+        exit(EXIT_FAILURE);
     }
 
     /* Listen on the socket, with max connection requests queued */
@@ -412,7 +414,7 @@ int32_t server_start(const char_t *addr, uint16_t port, int32_t max_clients)
     } else {
         log_error("Unable to listen");
         close(server_sockfd);
-        return ECONNREFUSED;
+        exit(EXIT_FAILURE);
     }
 
     int32_t num_of_threads = 0;

@@ -45,7 +45,6 @@ enum log_location {
 
 void on_sigint(int32_t _)
 {
-    log_info("Exit");
     server_stop();
     exit(EXIT_SUCCESS);
 }
@@ -150,19 +149,20 @@ int32_t main(int32_t argc, char_t *argv[])
             break;
         case 'h':
             usage();
-            return 0;
+            exit(EXIT_SUCCESS);
 
         default: /* '?' */
             usage();
-            return 0;
+            exit(EXIT_SUCCESS);
         }
     }
 
     if (optind < argc) {
         while (optind < argc) {
-            printf("Invalid option: %s\n", argv[optind++]);
+            printf("invalid option -- '%s'\n", argv[optind++]);
         }
         printf("\n");
+        exit(EXIT_FAILURE);
     }
 
     signal(SIGINT, on_sigint);
@@ -170,7 +170,5 @@ int32_t main(int32_t argc, char_t *argv[])
 
     configure_logging(log_loc, log_file);
 
-    int32_t server_error = server_start(addr, port, max_clients);
-
-    exit(server_error);
+    server_start(addr, port, max_clients);
 }
