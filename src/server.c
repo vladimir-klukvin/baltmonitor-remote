@@ -121,7 +121,7 @@ static void host_leave_session(struct session_info *session)
         struct response resp;
         resp.header.body_size = 0;
         resp.header.type = RESPONSE_SESSION_CLOSED_BY_HOST;
-        resp.header.session_id = session->session_id;
+        resp.header.session_id = session->id;
         send(session->target_sockfd, &resp, sizeof(resp), 0);
     }
 }
@@ -134,7 +134,8 @@ static void target_leave_session(struct session_info *session)
         struct response resp;
         resp.header.body_size = 0;
         resp.header.type = RESPONSE_SESSION_CLOSED_BY_TARGET;
-        resp.header.session_id = session->session_id;
+        resp.header.session_id = session->id;
+
         send(session->host_sockfd, &resp, sizeof(resp), 0);
     }
 }
@@ -160,7 +161,7 @@ static void host_routine(struct session_info *session)
         size_t expected_size =
             req->header.body_size + sizeof(struct request_header);
 
-        if (req->header.session_id != session->session_id) {
+        if (req->header.session_id != session->id) {
             /* TODO: Send bad request */
         }
 
@@ -211,7 +212,7 @@ static void target_routine(struct session_info *session)
         size_t expected_size =
             req->header.body_size + sizeof(struct request_header);
 
-        if (req->header.session_id != session->session_id) {
+        if (req->header.session_id != session->id) {
             /* TODO: Send bad request */
         }
 
@@ -257,9 +258,9 @@ static struct session_info *new_session(int32_t hostfd)
     session->host_sockfd = hostfd;
     session->is_host_connected = true;
 
-    session->session_id = generate_session_id();
+    session->id = generate_session_id();
 
-    log_info("New session with id %i created", session->session_id);
+    log_info("New session with id %i created", session->id);
 
     return session;
 }
@@ -274,7 +275,7 @@ static struct session_info *join_session(uint16_t id, int32_t targetfd)
     session->target_sockfd = targetfd;
     session->is_target_connected = true;
 
-    log_info("Joining to session with id %i success", session->session_id);
+    log_info("Joining to session with id %i success", session->id);
 
     return session;
 }
@@ -282,7 +283,7 @@ static struct session_info *join_session(uint16_t id, int32_t targetfd)
 static void clear_empty_session(struct session_info *session)
 {
     if (!session->is_host_connected && !session->is_target_connected) {
-        session_remove(session->session_id);
+        session_remove(session->id);
     }
 }
 
@@ -307,7 +308,7 @@ static void handle_session_request(const struct request *req, int32_t sockfd)
         struct session_info *session = new_session(sockfd);
 
         send_session_response(sockfd, RESPONCE_MAKE_SESSION_SUCCESS,
-                              session->session_id);
+                              session->id);
 
         host_routine(session);
         clear_empty_session(session);
@@ -331,7 +332,7 @@ static void handle_session_request(const struct request *req, int32_t sockfd)
         }
 
         send_session_response(sockfd, RESPONSE_JOIN_SESSION_SUCCESS,
-                              session->session_id);
+                              session->id);
 
         target_routine(session);
         clear_empty_session(session);

@@ -36,7 +36,7 @@
  * @brief Struct which contain state of pair communication session
  */
 struct session_info {
-    uint16_t session_id;
+    uint16_t id;
     bool_t is_host_connected;
     bool_t is_target_connected;
     int32_t host_sockfd;
