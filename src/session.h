@@ -67,7 +67,7 @@ extern void session_remove(uint16_t id);
  * @brief Initialize sessions table to store max_sessions
  * @param max_sessions Max number of sessions which server supports
  */
-extern void session_init_table(int16_t max_sessions);
+extern void session_init_table(uint16_t max_sessions);
 
 /**
  * @brief Check session for existing in table

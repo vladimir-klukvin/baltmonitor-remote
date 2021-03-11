@@ -2,7 +2,7 @@
  * @file log.h
  * @author V.K.
  * @brief This file contains function declarations for logging (including
- * logging configuringuration)
+ * logging configuration)
  * @date 2021-03-01
  *
  * @copyright Copyright (c) 2021 Balt-System Ltd. <info@bsystem.ru>
@@ -78,7 +78,7 @@ extern void log_debug(const char_t *format, ...);
 /**
  * @brief Set the minimum logging level, all calls of logging functions of
  * a lower level will have no effect
- * @param level Minumum logging level
+ * @param level Minimum logging level
  */
 extern void log_set_min_level(enum log_level level);
 

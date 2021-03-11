@@ -28,8 +28,6 @@
  *
  */
 #include <arpa/inet.h>
-#include <errno.h>
-#include <malloc.h>
 #include <pthread.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -45,8 +43,8 @@
 #define SOCKET_BUFFER_SIZE 20000
 
 enum response_type {
-    RESPONCE_MAKE_SESSION_SUCCESS,
-    RESPONCE_MAKE_SESSION_FAIL,
+    RESPONSE_MAKE_SESSION_SUCCESS,
+    RESPONSE_MAKE_SESSION_FAIL,
     RESPONSE_JOIN_SESSION_SUCCESS,
     RESPONSE_JOIN_SESSION_FAIL,
     RESPONSE_SESSION_CLOSED_BY_HOST,
@@ -93,11 +91,9 @@ static int32_t num_of_threads = 0;
 static int32_t opened_sockets[60];
 static int32_t num_of_opened_sockets = 0;
 
-struct session_info test_info;
-
 void join_threads(void)
 {
-    for (int8_t i = 0; i < num_of_threads; i++) {
+    for (int32_t i = 0; i < num_of_threads; i++) {
         pthread_join(threads[i], NULL);
     }
 
@@ -106,7 +102,7 @@ void join_threads(void)
 
 void close_sockets(void)
 {
-    for (int8_t i = 0; i < num_of_opened_sockets; i++) {
+    for (int32_t i = 0; i < num_of_opened_sockets; i++) {
         shutdown(opened_sockets[i], SHUT_RDWR);
         close(opened_sockets[i]);
     }
@@ -210,7 +206,7 @@ static void target_routine(struct session_info *session)
     struct request *req = malloc(SOCKET_BUFFER_SIZE);
 
     while (session->is_target_connected) {
-        size_t req_size =
+        ssize_t req_size =
             recv(session->target_sockfd, req, SOCKET_BUFFER_SIZE, 0);
 
         if (req_size <= 0 || req_size == SOCKET_BUFFER_SIZE) {
@@ -267,10 +263,10 @@ static uint16_t generate_session_id(void)
     return id;
 }
 
-static struct session_info *new_session(int32_t hostfd)
+static struct session_info *new_session(int32_t host_sockfd)
 {
     struct session_info *session = calloc(1, sizeof(struct session_info));
-    session->host_sockfd = hostfd;
+    session->host_sockfd = host_sockfd;
     session->is_host_connected = true;
 
     session->id = generate_session_id();
@@ -280,14 +276,14 @@ static struct session_info *new_session(int32_t hostfd)
     return session;
 }
 
-static struct session_info *join_session(uint16_t id, int32_t targetfd)
+static struct session_info *join_session(uint16_t id, int32_t target_sockfd)
 {
     if (!session_is_exist(id)) {
         return NULL;
     }
 
     struct session_info *session = session_get(id);
-    session->target_sockfd = targetfd;
+    session->target_sockfd = target_sockfd;
     session->is_target_connected = true;
 
     log_info("Joining to session with id %i success", session->id);
@@ -316,13 +312,13 @@ static void handle_session_request(const struct request *req, int32_t sockfd)
     switch (req->header.type) {
     case REQUEST_MAKE_SESSION: {
         if (req->header.role != ROLE_HOST) {
-            send_session_response(sockfd, RESPONCE_MAKE_SESSION_FAIL, 0);
+            send_session_response(sockfd, RESPONSE_MAKE_SESSION_FAIL, 0);
             break;
         }
 
         struct session_info *session = new_session(sockfd);
 
-        send_session_response(sockfd, RESPONCE_MAKE_SESSION_SUCCESS,
+        send_session_response(sockfd, RESPONSE_MAKE_SESSION_SUCCESS,
                               session->id);
 
         host_routine(session);
@@ -381,13 +377,13 @@ noreturn void server_start(const char_t *addr, uint16_t port,
 {
     /* Print server info message */
     log_info("Starting server: %s:%i", addr, port);
-    log_info("Max connetions: %i", max_clients);
+    log_info("Max connections: %i", max_clients);
 
     /* Set seed for rand function */
     srand(time(0));
 
     /* Init sessions table */
-    session_init_table(max_clients);
+    session_init_table((uint16_t)max_clients);
 
     /*
      * Create the server socket
@@ -432,8 +428,6 @@ noreturn void server_start(const char_t *addr, uint16_t port,
         close(server_sockfd);
         exit(EXIT_FAILURE);
     }
-
-    int32_t num_of_threads = 0;
 
     struct sockaddr_storage server_storage;
 

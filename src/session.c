@@ -33,8 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "global.h"
-
 /**
  * @brief Internal struct witch represents hash table item
  */
@@ -56,7 +54,7 @@ static struct key_value_pair *dummy_item;
 /**
  * @brief Hash table internal array size.
  */
-static int16_t hash_array_size;
+static size_t hash_array_size;
 
 /**
  * @brief Generates a hash code for specified key.
@@ -99,7 +97,7 @@ struct key_value_pair *find_item(int16_t key)
  * @param key Item key.
  * @param data Item Value.
  */
-static void insert_item(int key, struct session_info data)
+static void insert_item(int16_t key, struct session_info data)
 {
     struct key_value_pair *item = malloc(sizeof(struct key_value_pair));
     item->value = data;
@@ -129,10 +127,10 @@ static void insert_item(int key, struct session_info data)
  */
 static struct key_value_pair *remove_item(struct key_value_pair *item)
 {
-    int key = item->key;
+    int16_t key = item->key;
 
     /* Get the hash */
-    int hash_index = hash_code(key);
+    int16_t hash_index = hash_code(key);
 
     /* Move in array until an empty */
     while (hash_array[hash_index] != NULL) {
@@ -180,7 +178,7 @@ void session_remove(uint16_t id)
     free(remove_item(pair));
 }
 
-void session_init_table(int16_t max_sessions)
+void session_init_table(uint16_t max_sessions)
 {
     hash_array_size = max_sessions;
     hash_array = calloc(hash_array_size, sizeof(struct key_value_pair *));

@@ -148,9 +148,6 @@ int32_t main(int32_t argc, char_t *argv[])
             log_loc = LOG_LOCATION_SYSLOG;
             break;
         case 'h':
-            usage();
-            exit(EXIT_SUCCESS);
-
         default: /* '?' */
             usage();
             exit(EXIT_SUCCESS);
@@ -170,5 +167,5 @@ int32_t main(int32_t argc, char_t *argv[])
 
     configure_logging(log_loc, log_file);
 
-    server_start(addr, port, max_clients);
+    server_start(addr, (uint16_t)port, max_clients);
 }
