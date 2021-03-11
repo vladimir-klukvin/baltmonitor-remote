@@ -53,6 +53,7 @@ enum response_type {
     RESPONSE_SESSION_CLOSED_BY_TARGET,
     RESPONSE_RAISE_EVENT = 'E',
     RESPONSE_DATA = 'D',
+    RESPONSE_BAD_REQUEST = 'B'
 };
 
 enum request_type {
@@ -140,6 +141,16 @@ static void target_leave_session(struct session_info *session)
     }
 }
 
+static void send_bad_request(int32_t sockfd, uint16_t session_id)
+{
+    struct response resp;
+    resp.header.body_size = 0;
+    resp.header.type = RESPONSE_BAD_REQUEST;
+    resp.header.session_id = session_id;
+
+    send(sockfd, &resp, sizeof(resp), 0);
+}
+
 static void host_routine(struct session_info *session)
 {
     session->is_host_connected = true;
@@ -155,37 +166,39 @@ static void host_routine(struct session_info *session)
         }
 
         if (req->header.role != ROLE_HOST) {
-            /* TODO: Send bad request */
+            send_bad_request(session->host_sockfd, session->id);
+            continue;
+        }
+
+        if (req->header.session_id != session->id) {
+            send_bad_request(session->host_sockfd, session->id);
+            continue;
         }
 
         size_t expected_size =
             req->header.body_size + sizeof(struct request_header);
 
-        if (req->header.session_id != session->id) {
-            /* TODO: Send bad request */
-        }
-
         if (req_size != expected_size) {
-            /* TODO: Send bad request */
+            send_bad_request(session->host_sockfd, session->id);
+            continue;
         }
 
         switch (req->header.type) {
         case REQUEST_CLOSE_SESSION:
             host_leave_session(session);
-            continue;
+            break;
         case REQUEST_DATA:
             /* TODO: Make some response and send */
-            continue;
+            break;
         case REQUEST_RAISE_EVENT:
             /* TODO: Make some response and send */
-            continue;
+            break;
 
         case REQUEST_MAKE_SESSION:
         case REQUEST_JOIN_SESSION:
         default:
-            /* FIXME: Send something about bad request? */
-            host_leave_session(session);
-            continue;
+            send_bad_request(session->host_sockfd, session->id);
+            break;
         }
     }
     free(req);
@@ -206,37 +219,39 @@ static void target_routine(struct session_info *session)
         }
 
         if (req->header.role != ROLE_TARGET) {
-            /* TODO: Send bad request */
+            send_bad_request(session->target_sockfd, session->id);
+            continue;
+        }
+
+        if (req->header.session_id != session->id) {
+            send_bad_request(session->target_sockfd, session->id);
+            continue;
         }
 
         size_t expected_size =
             req->header.body_size + sizeof(struct request_header);
 
-        if (req->header.session_id != session->id) {
-            /* TODO: Send bad request */
-        }
-
         if (req_size != expected_size) {
-            /* TODO: Send bad request */
+            send_bad_request(session->target_sockfd, session->id);
+            continue;
         }
 
         switch (req->header.type) {
         case REQUEST_CLOSE_SESSION:
-            host_leave_session(session);
-            continue;
+            target_leave_session(session);
+            break;
         case REQUEST_DATA:
             /* TODO: Make some response and send */
-            continue;
+            break;
         case REQUEST_RAISE_EVENT:
             /* TODO: Make some response and send */
-            continue;
+            break;
 
         case REQUEST_MAKE_SESSION:
         case REQUEST_JOIN_SESSION:
         default:
-            /* FIXME: Send something about bad request? */
-            host_leave_session(session);
-            continue;
+            send_bad_request(session->target_sockfd, session->id);
+            break;
         }
     }
     free(req);
