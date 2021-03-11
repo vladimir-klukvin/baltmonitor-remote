@@ -6,7 +6,7 @@ OBJDIR = obj
 SRCDIR = src
 
 SRC := $(shell find $(SRCDIR) -name "*.c")
-OBJ := $(SRC:%.c=$(OBJDIR)/%.obj)
+OBJ := $(SRC:%.c=$(OBJDIR)/%.o)
 
 APP = baltmonitor-remote
 
@@ -22,7 +22,7 @@ debug: $(APP)
 $(APP): $(OBJ)
 	@$(CC) $^ $(LDFLAGS) -o $(APP)
 
-$(OBJDIR)/%.obj: %.c
+$(OBJDIR)/%.o: %.c
 	@mkdir -p '$(@D)'
 	@$(CC) -c $(CFLAGS) $< -o $@
 
