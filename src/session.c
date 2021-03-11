@@ -64,7 +64,7 @@ static size_t hash_array_size;
  */
 int16_t hash_code(int16_t key)
 {
-    return key % hash_array_size;
+    return key % (int16_t)hash_array_size;
 }
 
 /**

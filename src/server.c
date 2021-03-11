@@ -380,7 +380,7 @@ noreturn void server_start(const char_t *addr, uint16_t port,
     log_info("Max connections: %i", max_clients);
 
     /* Set seed for rand function */
-    srand(time(0));
+    srand((uint16_t)time(NULL));
 
     /* Init sessions table */
     session_init_table((uint16_t)max_clients);
