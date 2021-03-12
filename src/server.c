@@ -59,7 +59,7 @@ enum request_type {
     REQUEST_JOIN_SESSION = 'J',
     REQUEST_CLOSE_SESSION = 'C',
     REQUEST_RAISE_EVENT = 'E',
-    REQUEST_DATA = 'D',
+    REQUEST_DATA = 'D'
 };
 
 enum role { ROLE_HOST = 'H', ROLE_TARGET = 'T' };
@@ -147,6 +147,32 @@ static void send_bad_request(int32_t sockfd, uint16_t session_id)
     send(sockfd, &resp, sizeof(resp), 0);
 }
 
+static bool_t is_socket_error(ssize_t req_size)
+{
+    return (req_size <= 0) || (req_size == SOCKET_BUFFER_SIZE);
+}
+
+static bool_t is_bad_request(enum role role, uint16_t session_id,
+                             const struct request *req, ssize_t req_size)
+{
+    if (req->header.role != role) {
+        return true;
+    }
+
+    if (req->header.session_id != session_id) {
+        return true;
+    }
+
+    size_t expected_size =
+        req->header.body_size + sizeof(struct request_header);
+
+    if (req_size != expected_size) {
+        return true;
+    }
+
+    return false;
+}
+
 static void host_routine(struct session_info *session)
 {
     session->is_host_connected = true;
@@ -156,25 +182,12 @@ static void host_routine(struct session_info *session)
         ssize_t req_size =
             recv(session->host_sockfd, req, SOCKET_BUFFER_SIZE, 0);
 
-        if (req_size <= 0 || req_size == SOCKET_BUFFER_SIZE) {
+        if (is_socket_error(req_size)) {
             host_leave_session(session);
             continue;
         }
 
-        if (req->header.role != ROLE_HOST) {
-            send_bad_request(session->host_sockfd, session->id);
-            continue;
-        }
-
-        if (req->header.session_id != session->id) {
-            send_bad_request(session->host_sockfd, session->id);
-            continue;
-        }
-
-        size_t expected_size =
-            req->header.body_size + sizeof(struct request_header);
-
-        if (req_size != expected_size) {
+        if (is_bad_request(ROLE_HOST, session->id, req, req_size)) {
             send_bad_request(session->host_sockfd, session->id);
             continue;
         }
@@ -209,25 +222,12 @@ static void target_routine(struct session_info *session)
         ssize_t req_size =
             recv(session->target_sockfd, req, SOCKET_BUFFER_SIZE, 0);
 
-        if (req_size <= 0 || req_size == SOCKET_BUFFER_SIZE) {
+        if (is_socket_error(req_size)) {
             target_leave_session(session);
             continue;
         }
 
-        if (req->header.role != ROLE_TARGET) {
-            send_bad_request(session->target_sockfd, session->id);
-            continue;
-        }
-
-        if (req->header.session_id != session->id) {
-            send_bad_request(session->target_sockfd, session->id);
-            continue;
-        }
-
-        size_t expected_size =
-            req->header.body_size + sizeof(struct request_header);
-
-        if (req_size != expected_size) {
+        if (is_bad_request(ROLE_TARGET, session->id, req, req_size)) {
             send_bad_request(session->target_sockfd, session->id);
             continue;
         }
@@ -257,7 +257,7 @@ static uint16_t generate_session_id(void)
 {
     uint16_t id;
     do {
-        id = rand() % 10000;
+        id = (uint16_t)(rand() % 10000);
     } while (session_is_exist(id));
 
     return id;
