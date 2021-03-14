@@ -40,8 +40,13 @@
 #include "log.h"
 #include "session.h"
 
+/*
+ * TODO: set max size: sizeof(struct request_header) + size of 2k oscillogram
+ * messages
+ */
 #define SOCKET_BUFFER_SIZE 20000
 
+/* TODO: Add brief */
 enum response_type {
     RESPONSE_MAKE_SESSION_SUCCESS,
     RESPONSE_MAKE_SESSION_FAIL,
@@ -54,6 +59,7 @@ enum response_type {
     RESPONSE_BAD_REQUEST = 'B'
 };
 
+/* TODO: Add brief */
 enum request_type {
     REQUEST_MAKE_SESSION = 'M',
     REQUEST_JOIN_SESSION = 'J',
@@ -62,24 +68,45 @@ enum request_type {
     REQUEST_DATA = 'D'
 };
 
+/* TODO: Add brief */
 enum role { ROLE_HOST = 'H', ROLE_TARGET = 'T' };
 
+/* TODO: Add brief */
 struct response {
     struct response_header {
-        enum response_type type;
+        enum response_type type : 8;
         uint16_t session_id;
+        /*
+         * Since the size of the 'body' field can be different this field is
+         * used to indicate its size
+         */
         size_t body_size;
     } header;
+    /*
+     * This field is never used by the server.
+     * contains any information that will be used by clients.
+     * Used with request types REQUEST_DATA and REQUEST_RAISE_EVENT.
+     */
     uint8_t body[];
 };
 
+/* TODO: Add brief */
 struct request {
     struct request_header {
         enum request_type type : 8;
         enum role role : 8;
         uint16_t session_id;
+        /*
+         * Since the size of the 'body' field can be different this field is
+         * used to indicate its size
+         */
         size_t body_size;
     } header;
+    /*
+     * This field is never used by the server.
+     * contains any information that will be used by clients.
+     * Used with request types REQUEST_DATA and REQUEST_RAISE_EVENT.
+     */
     uint8_t body[];
 };
 
