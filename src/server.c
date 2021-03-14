@@ -149,7 +149,16 @@ static void send_bad_request(int32_t sockfd, uint16_t session_id)
 
 static bool_t is_socket_error(ssize_t req_size)
 {
-    return (req_size <= 0) || (req_size == SOCKET_BUFFER_SIZE);
+    /*
+     * If the size is less than or equal to 0, then this is a socket error,
+     * usually this happens when the socket is closed. The size of the buffer
+     * was chosen in such a way that the largest theoretically possible request
+     * would fit into it, therefore, too large requests are also incorrect.
+     * Well, if the request is less than the length of the header, then there is
+     * some problem with the socket.
+     */
+    return (req_size <= 0) || (req_size == SOCKET_BUFFER_SIZE) ||
+           (req_size < sizeof(struct request));
 }
 
 static bool_t is_bad_request(enum role role, uint16_t session_id,
