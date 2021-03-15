@@ -46,7 +46,9 @@
  */
 #define SOCKET_BUFFER_SIZE 20000
 
-/* TODO: Add brief */
+/**
+ * @brief The types of response messages that the server send to clients
+ */
 enum response_type {
     RESPONSE_MAKE_SESSION_SUCCESS,
     RESPONSE_MAKE_SESSION_FAIL,
@@ -59,7 +61,9 @@ enum response_type {
     RESPONSE_BAD_REQUEST = 'B'
 };
 
-/* TODO: Add brief */
+/**
+ * @brief The types of requests that clients send to the server
+ */
 enum request_type {
     REQUEST_MAKE_SESSION = 'M',
     REQUEST_JOIN_SESSION = 'J',
@@ -68,10 +72,16 @@ enum request_type {
     REQUEST_DATA = 'D'
 };
 
-/* TODO: Add brief */
+/**
+ * @brief Roles of clients in the session. The creator of the session is the
+ * host, the one who connected to the session is the target.
+ */
 enum role { ROLE_HOST = 'H', ROLE_TARGET = 'T' };
 
-/* TODO: Add brief */
+/**
+ * @brief Structure of the response.
+ * The header contains service information and the body contains response data.
+ */
 struct response {
     struct response_header {
         enum response_type type : 8;
@@ -85,12 +95,15 @@ struct response {
     /*
      * This field is never used by the server.
      * contains any information that will be used by clients.
-     * Used with request types REQUEST_DATA and REQUEST_RAISE_EVENT.
+     * Used with response types RESPONSE_DATA and RESPONSE_RAISE_EVENT.
      */
     uint8_t body[];
 };
 
-/* TODO: Add brief */
+/**
+ * @brief Structure of the request.
+ * The header contains service information and the body contains request data.
+ */
 struct request {
     struct request_header {
         enum request_type type : 8;
@@ -110,6 +123,7 @@ struct request {
     uint8_t body[];
 };
 
+/* Server's socket file descriptor */
 static int32_t server_sockfd;
 
 static pthread_t threads[60];

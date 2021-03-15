@@ -62,7 +62,7 @@ static size_t hash_array_size;
  * @param key Specified key
  * @return int16_t Hash
  */
-int16_t hash_code(int16_t key)
+static int16_t hash_code(int16_t key)
 {
     return key % (int16_t)hash_array_size;
 }
@@ -72,7 +72,7 @@ int16_t hash_code(int16_t key)
  * @param key Specified key
  * @return struct key_value_pair* Pointer to hash table item
  */
-struct key_value_pair *find_item(int16_t key)
+static struct key_value_pair *find_item(int16_t key)
 {
     /* Get the hash */
     int hash_index = hash_code(key);
