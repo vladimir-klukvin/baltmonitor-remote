@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -Wpedantic -Wextra -std=c18
 LDFLAGS = -lpthread
 
 OBJDIR = obj
