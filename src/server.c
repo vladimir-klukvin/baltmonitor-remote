@@ -40,12 +40,6 @@
 #include "log.h"
 #include "session.h"
 
-/*
- * TODO: set max size: sizeof(struct request_header) + size of 2k oscillogram
- * messages
- */
-#define SOCKET_BUFFER_SIZE 20000
-
 /**
  * @brief The types of response messages that the server send to clients
  */
@@ -56,27 +50,27 @@ enum response_type {
     RESPONSE_JOIN_SESSION_FAIL,
     RESPONSE_SESSION_CLOSED_BY_HOST,
     RESPONSE_SESSION_CLOSED_BY_TARGET,
-    RESPONSE_RAISE_EVENT = 'E',
-    RESPONSE_DATA = 'D',
-    RESPONSE_BAD_REQUEST = 'B'
+    RESPONSE_RAISE_EVENT,
+    RESPONSE_DATA,
+    RESPONSE_BAD_REQUEST
 };
 
 /**
  * @brief The types of requests that clients send to the server
  */
 enum request_type {
-    REQUEST_MAKE_SESSION = 'M',
-    REQUEST_JOIN_SESSION = 'J',
-    REQUEST_CLOSE_SESSION = 'C',
-    REQUEST_RAISE_EVENT = 'E',
-    REQUEST_DATA = 'D'
+    REQUEST_MAKE_SESSION,
+    REQUEST_JOIN_SESSION,
+    REQUEST_CLOSE_SESSION,
+    REQUEST_RAISE_EVENT,
+    REQUEST_DATA
 };
 
 /**
  * @brief Roles of clients in the session. The creator of the session is the
  * host, the one who connected to the session is the target.
  */
-enum role { ROLE_HOST = 'H', ROLE_TARGET = 'T' };
+enum role { ROLE_HOST, ROLE_TARGET };
 
 /**
  * @brief Structure of the response.
@@ -123,15 +117,32 @@ struct request {
     uint8_t body[];
 };
 
+/* The size of the socket buffer used to store the request from the host */
+static const size_t host_socket_buffer_size = 150000;
+
+/* The size of the socket buffer used to store the request from the target */
+static const size_t target_socket_buffer_size = 1000;
+
 /* Server's socket file descriptor */
 static int32_t server_sockfd;
 
+/* Active working threads, one per client */
+/* TODO: Use linked list */
 static pthread_t threads[60];
+
+/* Number of active working threads */
 static int32_t num_of_threads = 0;
 
+/* Active opened sockets, one per client */
+/* TODO: Use linked list or get sockets from sessions */
 static int32_t opened_sockets[60];
+
+/* Number of active opened sockets */
 static int32_t num_of_opened_sockets = 0;
 
+/**
+ * @brief Join all active socket threads
+ */
 void join_threads(void)
 {
     for (int32_t i = 0; i < num_of_threads; i++) {
@@ -141,6 +152,9 @@ void join_threads(void)
     num_of_threads = 0;
 }
 
+/**
+ * @brief Shutdown and close all opened sockets
+ */
 void close_sockets(void)
 {
     for (int32_t i = 0; i < num_of_opened_sockets; i++) {
@@ -151,6 +165,11 @@ void close_sockets(void)
     num_of_opened_sockets = 0;
 }
 
+/**
+ * @brief Initiate a session to be closed by the host. If the target is still
+ * connected, then send a notification to it.
+ * @param session The specified session to be closed
+ */
 static void host_leave_session(struct session_info *session)
 {
     session->is_host_connected = false;
@@ -164,6 +183,11 @@ static void host_leave_session(struct session_info *session)
     }
 }
 
+/**
+ * @brief Initiate a session to be closed by the target. If the host is still
+ * connected, then send a notification to it.
+ * @param session The specified session to be closed
+ */
 static void target_leave_session(struct session_info *session)
 {
     session->is_target_connected = false;
@@ -178,6 +202,12 @@ static void target_leave_session(struct session_info *session)
     }
 }
 
+/**
+ * @brief After receiving a bad request, send a response with information about
+ * it.
+ * @param sockfd Socket file descriptor of the bad request sender
+ * @param session_id The session within which the bad request was received
+ */
 static void send_bad_request(int32_t sockfd, uint16_t session_id)
 {
     struct response resp;
@@ -188,7 +218,7 @@ static void send_bad_request(int32_t sockfd, uint16_t session_id)
     send(sockfd, &resp, sizeof(resp), 0);
 }
 
-static bool_t is_socket_error(ssize_t req_size)
+static bool_t is_socket_error(enum role role, ssize_t req_size)
 {
     /*
      * If the size is less than or equal to 0, then this is a socket error,
@@ -198,8 +228,12 @@ static bool_t is_socket_error(ssize_t req_size)
      * Well, if the request is less than the length of the header, then there is
      * some problem with the socket.
      */
-    return (req_size <= 0) || (req_size == SOCKET_BUFFER_SIZE) ||
-           (req_size < sizeof(struct request));
+
+    size_t max_size = role == ROLE_HOST ? host_socket_buffer_size :
+                                          target_socket_buffer_size;
+
+    return (req_size <= 0) || (req_size == (ssize_t)max_size) ||
+           (req_size < (ssize_t)sizeof(struct request));
 }
 
 static bool_t is_bad_request(enum role role, uint16_t session_id,
@@ -216,7 +250,7 @@ static bool_t is_bad_request(enum role role, uint16_t session_id,
     size_t expected_size =
         req->header.body_size + sizeof(struct request_header);
 
-    if (req_size != expected_size) {
+    if (req_size != (ssize_t)expected_size) {
         return true;
     }
 
@@ -226,13 +260,13 @@ static bool_t is_bad_request(enum role role, uint16_t session_id,
 static void host_routine(struct session_info *session)
 {
     session->is_host_connected = true;
-    struct request *req = malloc(SOCKET_BUFFER_SIZE);
+    struct request *req = malloc(host_socket_buffer_size);
 
     while (session->is_host_connected) {
         ssize_t req_size =
-            recv(session->host_sockfd, req, SOCKET_BUFFER_SIZE, 0);
+            recv(session->host_sockfd, req, host_socket_buffer_size, 0);
 
-        if (is_socket_error(req_size)) {
+        if (is_socket_error(ROLE_HOST, req_size)) {
             host_leave_session(session);
             continue;
         }
@@ -266,13 +300,13 @@ static void host_routine(struct session_info *session)
 static void target_routine(struct session_info *session)
 {
     session->is_target_connected = true;
-    struct request *req = malloc(SOCKET_BUFFER_SIZE);
+    struct request *req = malloc(target_socket_buffer_size);
 
     while (session->is_target_connected) {
         ssize_t req_size =
-            recv(session->target_sockfd, req, SOCKET_BUFFER_SIZE, 0);
+            recv(session->target_sockfd, req, target_socket_buffer_size, 0);
 
-        if (is_socket_error(req_size)) {
+        if (is_socket_error(ROLE_TARGET, req_size)) {
             target_leave_session(session);
             continue;
         }

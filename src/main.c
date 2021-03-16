@@ -43,11 +43,14 @@ enum log_location {
     LOG_LOCATION_SYSLOG
 };
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void on_sigint(int32_t _)
 {
     server_stop();
     exit(EXIT_SUCCESS);
 }
+#pragma GCC diagnostic pop
 
 void configure_logging(enum log_location loc, const char_t *file)
 {
@@ -74,25 +77,25 @@ void configure_logging(enum log_location loc, const char_t *file)
 
 void usage(void)
 {
-    /* clang-format off */
-    printf("Usage:\n");
-    printf("  %s [[-a IP_ADDRESS] [-p PORT_NUM] [-m COUNT] [[-f[=FILE_NAME]] | [-s]]] | [-h] \n", PROGRAM_NAME);
-    printf("\n");
-    printf("Options:\n");
-    printf("  -a, --address=IP_ADDRESS       start server at IP_ADDRESS \n");
-    printf("  -p, --port=PORT_NUM            server will listen PORT_NUM\n");
-    printf("  -m, --max-clients=COUNT        can serve simultaneously COUNT clients\n");
-    printf("  -f, --file[=FILE_NAME]         server logs will be stored in the FILE_NAME,\n");
-    printf("                                 default: server.log\n");
-    printf("  -s, --syslog                   server logs will be stored in the system log\n");
-    printf("  -h, --help                     give this help list\n");
-    printf("\n");
-    printf("By default server put logs into stdout. Use --file[=FILE_NAME] or --syslog to\n");
-    printf("store logs in another location.\n");
-    printf("\n");
-    printf("Mandatory or optional arguments to long options are also mandatory or optional\n");
-    printf("for any corresponding short options.\n");
-    /* clang-format on */
+    printf(
+        "Usage:\n"
+        "  %s [[-a IP_ADDRESS] [-p PORT_NUM] [-m COUNT] [[-f[=FILE_NAME]] | [-s]]] | [-h] \n"
+        "\n"
+        "Options:\n"
+        "  -a, --address=IP_ADDRESS       start server at IP_ADDRESS \n"
+        "  -p, --port=PORT_NUM            server will listen PORT_NUM\n"
+        "  -m, --max-clients=COUNT        can serve simultaneously COUNT clients\n"
+        "  -f, --file[=FILE_NAME]         server logs will be stored in the FILE_NAME,\n"
+        "                                 default: server.log\n"
+        "  -s, --syslog                   server logs will be stored in the system log\n"
+        "  -h, --help                     give this help list\n"
+        "\n"
+        "By default server put logs into stdout. Use --file[=FILE_NAME] or --syslog to\n"
+        "store logs in another location.\n"
+        "\n"
+        "Mandatory or optional arguments to long options are also mandatory or optional\n"
+        "for any corresponding short options.\n",
+        PROGRAM_NAME);
 }
 
 int32_t main(int32_t argc, char_t *argv[])
@@ -106,13 +109,13 @@ int32_t main(int32_t argc, char_t *argv[])
     enum log_location log_loc = LOG_LOCATION_STDOUT;
 
     static struct option long_options[] = {
-        {"address", required_argument, 0, 'a'},
-        {"port", required_argument, 0, 'p'},
-        {"max-clients", required_argument, 0, 'm'},
-        {"file", optional_argument, 0, 'f'},
-        {"syslog", no_argument, 0, 's'},
-        {"help", no_argument, 0, 'h'},
-        {0, 0, 0, 0}};
+        {"address", required_argument, NULL, 'a'},
+        {"port", required_argument, NULL, 'p'},
+        {"max-clients", required_argument, NULL, 'm'},
+        {"file", optional_argument, NULL, 'f'},
+        {"syslog", no_argument, NULL, 's'},
+        {"help", no_argument, NULL, 'h'},
+        {NULL, false, NULL, '\0'}};
 
     while (true) {
         int c = getopt_long(argc, argv, "a:p:m:f::sh", long_options, NULL);
@@ -129,6 +132,7 @@ int32_t main(int32_t argc, char_t *argv[])
             break;
         case 'm':
             max_clients = atoi(optarg);
+            break;
         case 'f':
             if (log_loc != LOG_LOCATION_STDOUT) {
                 printf("Invalid option: %s\n", argv[optind]);
