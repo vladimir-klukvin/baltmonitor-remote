@@ -1,9 +1,8 @@
 /**
  * @file session.h
- * @author V.K.
  * @brief
- * @date 2021-02-26
  *
+ * @author Vladimir Klukvin <vladimir.klukvin@yandex.com>
  * @copyright Copyright (c) 2021 Balt-System Ltd. <info@bsystem.ru>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,7 +22,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 #ifndef SESSION_H_
 #define SESSION_H_

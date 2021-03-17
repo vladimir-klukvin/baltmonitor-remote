@@ -1,10 +1,9 @@
 /**
  * @file log.h
- * @author V.K.
  * @brief This file contains function declarations for logging (including
  * logging configuration)
- * @date 2021-03-01
  *
+ * @author Vladimir Klukvin <vladimir.klukvin@yandex.com>
  * @copyright Copyright (c) 2021 Balt-System Ltd. <info@bsystem.ru>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +23,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 #ifndef LOG_H_
 #define LOG_H_

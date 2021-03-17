@@ -1,11 +1,10 @@
 /**
  * @file server.c
- * @author V.K.
  * @brief This file contains definitions of functions containing the logic of
  * the remote server, including the request exchange protocol and server
  * management.
- * @date 2021-02-26
  *
+ * @author Vladimir Klukvin <vladimir.klukvin@yandex.com>
  * @copyright Copyright (c) 2021 Balt-System Ltd. <info@bsystem.ru>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -25,7 +24,6 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
- *
  */
 #include <arpa/inet.h>
 #include <pthread.h>
@@ -218,7 +216,13 @@ static void send_bad_request(int32_t sockfd, uint16_t session_id)
     send(sockfd, &resp, sizeof(resp), 0);
 }
 
-static bool_t is_socket_error(enum role role, ssize_t req_size)
+/**
+ * @brief Check the result of reading data from a socket FD
+ * @param req_size Size of data read.
+ * @param buffer_size Client buffer size
+ * @return bool_t true if socket error, false if not
+ */
+static bool_t is_socket_error(ssize_t req_size, size_t buffer_size)
 {
     /*
      * If the size is less than or equal to 0, then this is a socket error,
@@ -228,14 +232,18 @@ static bool_t is_socket_error(enum role role, ssize_t req_size)
      * Well, if the request is less than the length of the header, then there is
      * some problem with the socket.
      */
-
-    size_t max_size = role == ROLE_HOST ? host_socket_buffer_size :
-                                          target_socket_buffer_size;
-
-    return (req_size <= 0) || (req_size == (ssize_t)max_size) ||
+    return (req_size <= 0) || (req_size == (ssize_t)buffer_size) ||
            (req_size < (ssize_t)sizeof(struct request));
 }
 
+/**
+ * @brief Verify client request
+ * @param role Role of client
+ * @param session_id The session within which the request was received
+ * @param req The request which need to verify
+ * @param req_size Size of data read.
+ * @return bool_t true if request is bad, false if not
+ */
 static bool_t is_bad_request(enum role role, uint16_t session_id,
                              const struct request *req, ssize_t req_size)
 {
@@ -257,6 +265,11 @@ static bool_t is_bad_request(enum role role, uint16_t session_id,
     return false;
 }
 
+/**
+ * @brief Host request processing routine
+ * @param session Information about the session in which the processing takes
+ * place
+ */
 static void host_routine(struct session_info *session)
 {
     session->is_host_connected = true;
@@ -266,7 +279,7 @@ static void host_routine(struct session_info *session)
         ssize_t req_size =
             recv(session->host_sockfd, req, host_socket_buffer_size, 0);
 
-        if (is_socket_error(ROLE_HOST, req_size)) {
+        if (is_socket_error(req_size, host_socket_buffer_size)) {
             host_leave_session(session);
             continue;
         }
@@ -297,6 +310,11 @@ static void host_routine(struct session_info *session)
     free(req);
 }
 
+/**
+ * @brief Target request processing routine
+ * @param session Information about the session in which the processing takes
+ * place
+ */
 static void target_routine(struct session_info *session)
 {
     session->is_target_connected = true;
@@ -306,7 +324,7 @@ static void target_routine(struct session_info *session)
         ssize_t req_size =
             recv(session->target_sockfd, req, target_socket_buffer_size, 0);
 
-        if (is_socket_error(ROLE_TARGET, req_size)) {
+        if (is_socket_error(req_size, target_socket_buffer_size)) {
             target_leave_session(session);
             continue;
         }
@@ -337,6 +355,10 @@ static void target_routine(struct session_info *session)
     free(req);
 }
 
+/**
+ * @brief Generate a four-digit identifier for a new session
+ * @return uint16_t Unique Id for new session
+ */
 static uint16_t generate_session_id(void)
 {
     uint16_t id;
