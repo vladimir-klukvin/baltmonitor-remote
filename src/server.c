@@ -220,7 +220,7 @@ static void send_bad_request(int32_t sockfd, uint16_t session_id)
  * @brief Check the result of reading data from a socket FD
  * @param req_size Size of data read.
  * @param buffer_size Client buffer size
- * @return bool_t true if socket error, false if not
+ * @return true if socket error, false if not
  */
 static bool_t is_socket_error(ssize_t req_size, size_t buffer_size)
 {
@@ -242,7 +242,7 @@ static bool_t is_socket_error(ssize_t req_size, size_t buffer_size)
  * @param session_id The session within which the request was received
  * @param req The request which need to verify
  * @param req_size Size of data read.
- * @return bool_t true if request is bad, false if not
+ * @return true if request is bad, false if not
  */
 static bool_t is_bad_request(enum role role, uint16_t session_id,
                              const struct request *req, ssize_t req_size)
@@ -357,7 +357,7 @@ static void target_routine(struct session_info *session)
 
 /**
  * @brief Generate a four-digit identifier for a new session
- * @return uint16_t Unique Id for new session
+ * @return Unique Id for new session
  */
 static uint16_t generate_session_id(void)
 {
@@ -369,6 +369,12 @@ static uint16_t generate_session_id(void)
     return id;
 }
 
+/**
+ * @brief Create a new session
+ * @param host_sockfd Descriptor of the client who wants to create a new session
+ * and be the host in it
+ * @return A new session with a unique id in which the client is the host
+ */
 static struct session_info *new_session(int32_t host_sockfd)
 {
     struct session_info *session = calloc(1, sizeof(struct session_info));
@@ -382,6 +388,14 @@ static struct session_info *new_session(int32_t host_sockfd)
     return session;
 }
 
+/**
+ * @brief Join an active session by session id
+ * @param id Unique identification number of the session to which the target
+ * wants to join
+ * @param target_sockfd Descriptor of the client who wants to join the session
+ * @return Session info on success, or NULL if no session with the specified
+ * identifier was found
+ */
 static struct session_info *join_session(uint16_t id, int32_t target_sockfd)
 {
     if (!session_is_exist(id)) {
@@ -481,14 +495,12 @@ static void *socket_thread(void *arg)
 noreturn void server_start(const char_t *addr, uint16_t port,
                            int32_t max_clients)
 {
-    /* Print server info message */
     log_info("Starting server: %s:%i", addr, port);
     log_info("Max connections: %i", max_clients);
 
     /* Set seed for rand function */
     srand((uint16_t)time(NULL));
 
-    /* Init sessions table */
     session_init_table((uint16_t)max_clients);
 
     /*
@@ -501,19 +513,15 @@ noreturn void server_start(const char_t *addr, uint16_t port,
     int32_t one = 1;
     setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(int32_t));
 
-    /* Server socket address */
-    struct sockaddr_in server_addr;
     /*
      * Configure settings of the server address struct
      * Address family: Internet
+     * Port number, using htons function to use proper byte order
+     * IP address
      */
-    server_addr.sin_family = AF_INET;
-
-    /* Set port number, using htons function to use proper byte order */
-    server_addr.sin_port = htons(port);
-
-    /* Set IP address */
-    server_addr.sin_addr.s_addr = inet_addr(addr);
+    struct sockaddr_in server_addr = {.sin_family = AF_INET,
+                                      .sin_port = htons(port),
+                                      .sin_addr.s_addr = inet_addr(addr)};
 
     /* Set all bits of the padding field to 0 */
     memset(server_addr.sin_zero, 0, sizeof(server_addr.sin_zero));
@@ -535,19 +543,15 @@ noreturn void server_start(const char_t *addr, uint16_t port,
         exit(EXIT_FAILURE);
     }
 
-    struct sockaddr_storage server_storage;
-
-    /* Incoming socket */
-    int32_t new_sd;
-
-    socklen_t addr_size;
-
     while (true) {
         /* Accept call. Create a new socket for the incoming connection */
-        addr_size = sizeof(server_storage);
         log_debug("Wait for a client");
-        new_sd = accept(server_sockfd, (struct sockaddr *)&server_storage,
-                        &addr_size);
+        struct sockaddr_storage client_storage;
+        socklen_t addr_size = sizeof(struct sockaddr_storage);
+
+        int32_t new_sd = accept(server_sockfd,
+                                (struct sockaddr *)&client_storage, &addr_size);
+
         log_debug("Accept client");
 
         opened_sockets[num_of_opened_sockets++] = new_sd;

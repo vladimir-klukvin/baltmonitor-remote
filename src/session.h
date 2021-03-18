@@ -44,7 +44,7 @@ struct session_info {
 /**
  * @brief Get session by specified id
  * @param id Id number of session
- * @return struct session_info* Pointer to requested session
+ * @return Pointer to requested session
  */
 struct session_info *session_get(uint16_t id);
 
@@ -70,7 +70,7 @@ extern void session_init_table(uint16_t max_sessions);
 /**
  * @brief Check session for existing in table
  * @param id Id of session
- * @return bool_t true if exist, false if not
+ * @return true if exist, false if not
  */
 extern bool_t session_is_exist(uint16_t id);
 

@@ -4,13 +4,13 @@
             80
         ],
         "files.insertFinalNewline": true,
-        "editor.glyphMargin": true,
+        "editor.glyphMargin": true
     },
     "files.associations": {
         "*.C": "c",
         "*.c": "c",
         "*.H": "c",
-        "*.h": "c",
+        "*.h": "c"
     },
     "files.exclude": {
         "**/.git": true,
@@ -20,6 +20,7 @@
         "**/.DS_Store": true,
         "baltmonitor-remote": true
     },
+    "doxdocgen.generic.includeTypeAtReturn": false,
     "doxdocgen.generic.order": [
         "brief",
         "tparam",
@@ -56,5 +57,5 @@
         "THE SOFTWARE.",
     ],
     "doxdocgen.generic.authorName": "Vladimir Klukvin <vladimir.klukvin@yandex.com>",
-    "doxdocgen.generic.authorTag": "@author {author}",
+    "doxdocgen.generic.authorTag": "@author {author}"
 }

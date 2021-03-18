@@ -25,9 +25,7 @@
  */
 #include "session.h"
 
-#include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,7 +56,7 @@ static size_t hash_array_size;
  * @brief Generates a hash code for specified key.
  * Values are used to index a hash table.
  * @param key Specified key
- * @return int16_t Hash
+ * @return Hash
  */
 static int16_t hash_code(int16_t key)
 {
@@ -68,7 +66,7 @@ static int16_t hash_code(int16_t key)
 /**
  * @brief Search key_value_pair in hash table by key
  * @param key Specified key
- * @return struct key_value_pair* Pointer to hash table item
+ * @return Pointer to hash table item
  */
 static struct key_value_pair *find_item(int16_t key)
 {
@@ -120,7 +118,7 @@ static void insert_item(int16_t key, struct session_info data)
 /**
  * @brief Remove key_value_pair from hash table
  * @param item Pointer to key_value_pair which must be removed from hash table
- * @return struct key_value_pair* Pointer to same key_value_pair or
+ * @return Pointer to same key_value_pair or
  * NULL if pair not exists in hash table
  */
 static struct key_value_pair *remove_item(struct key_value_pair *item)

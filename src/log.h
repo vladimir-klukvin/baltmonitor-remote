@@ -89,7 +89,7 @@ extern void log_reset_state(void);
  * @brief Set log target to specified file
  * @param filename The name of the file where the logs will be sent.
  * If the file already exists, it will be appended.
- * @return int32_t 0 for success or -1 for errors
+ * @return 0 for success or -1 for errors
  */
 extern int32_t log_set_log_file(const char_t *filename);
 
