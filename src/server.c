@@ -25,6 +25,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
 #include <arpa/inet.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -411,6 +412,11 @@ static struct session_info *join_session(uint16_t id, int32_t target_sockfd)
     return session;
 }
 
+/**
+ * @brief Сheck the activity of the session and destroy it if no one is
+ * connected to it.
+ * @param session Information about the session which need to check
+ */
 static void clear_empty_session(struct session_info *session)
 {
     if (!session->is_host_connected && !session->is_target_connected) {
@@ -418,6 +424,15 @@ static void clear_empty_session(struct session_info *session)
     }
 }
 
+/**
+ * @brief Send a response about the status of the request related to session
+ * management
+ * @param sockfd Descriptor of the client
+ * @param type The type of response, in this case the success or failure of the
+ * operation
+ * @param session_id Unique identification number of the session with which the
+ * client's request was associated
+ */
 static void send_session_response(int32_t sockfd, enum response_type type,
                                   uint16_t session_id)
 {
@@ -427,6 +442,12 @@ static void send_session_response(int32_t sockfd, enum response_type type,
     send(sockfd, &resp, sizeof(resp), 0);
 }
 
+/**
+ * @brief Processing the first client request if it is associated with session
+ * management and transferring control to a subroutine
+ * @param req First request from a client
+ * @param sockfd Descriptor of the client
+ */
 static void handle_session_request(const struct request *req, int32_t sockfd)
 {
     switch (req->header.type) {
@@ -474,6 +495,10 @@ static void handle_session_request(const struct request *req, int32_t sockfd)
     }
 }
 
+/**
+ * @brief Socket thread start routine.
+ * @param arg Pointer to descriptor of the client
+ */
 static void *socket_thread(void *arg)
 {
     int32_t sockfd = *((int32_t *)arg);
