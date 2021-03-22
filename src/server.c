@@ -275,6 +275,7 @@ static void host_routine(struct session_info *session)
 {
     session->is_host_connected = true;
     struct request *req = malloc(host_socket_buffer_size);
+    struct response *resp = malloc(host_socket_buffer_size);
 
     while (session->is_host_connected) {
         ssize_t req_size =
@@ -295,12 +296,21 @@ static void host_routine(struct session_info *session)
             host_leave_session(session);
             break;
         case REQUEST_DATA:
-            /* TODO: Make some response and send */
+            resp->header.type = RESPONSE_DATA;
+            resp->header.session_id = session->id;
+            resp->header.body_size = req->header.body_size;
+
+            memcpy(resp->body, req->body, req->header.body_size);
+            send(session->target_sockfd, &resp, sizeof(resp), 0);
             break;
         case REQUEST_RAISE_EVENT:
-            /* TODO: Make some response and send */
-            break;
+            resp->header.type = RESPONSE_RAISE_EVENT;
+            resp->header.session_id = session->id;
+            resp->header.body_size = req->header.body_size;
 
+            memcpy(resp->body, req->body, req->header.body_size);
+            send(session->target_sockfd, &resp, sizeof(resp), 0);
+            break;
         case REQUEST_MAKE_SESSION:
         case REQUEST_JOIN_SESSION:
         default:
@@ -320,6 +330,7 @@ static void target_routine(struct session_info *session)
 {
     session->is_target_connected = true;
     struct request *req = malloc(target_socket_buffer_size);
+    struct response *resp = malloc(target_socket_buffer_size);
 
     while (session->is_target_connected) {
         ssize_t req_size =
@@ -340,12 +351,14 @@ static void target_routine(struct session_info *session)
             target_leave_session(session);
             break;
         case REQUEST_DATA:
-            /* TODO: Make some response and send */
+            resp->header.type = RESPONSE_DATA;
+            resp->header.session_id = session->id;
+            resp->header.body_size = req->header.body_size;
+
+            memcpy(resp->body, req->body, req->header.body_size);
+            send(session->host_sockfd, &resp, sizeof(resp), 0);
             break;
         case REQUEST_RAISE_EVENT:
-            /* TODO: Make some response and send */
-            break;
-
         case REQUEST_MAKE_SESSION:
         case REQUEST_JOIN_SESSION:
         default:
